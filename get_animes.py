@@ -5,9 +5,13 @@ query ($usr: String, $page: Int, $perPage: Int) {
   Page (page: $page, perPage: $perPage) {
         mediaList (userName: $usr) {
             media {
+                id
                 title {
                     romaji
                     english
+                }
+                coverImage {
+                    large
                 }
             }
         }
@@ -28,7 +32,7 @@ i = 1
 d = []
 
 while True:
-    data = [(r["media"]["title"]["romaji"], r["media"]["title"]["english"]) for r in 
+    data = [(r["media"]["title"]["romaji"], r["media"]["title"]["english"], r["media"]["id"], r["media"]["coverImage"]["large"]) for r in 
             requests.post(url, json={'query': query, 'variables': variables}).json()["data"]["Page"]["mediaList"]]
     if data == []:
         break
