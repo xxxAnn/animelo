@@ -3,6 +3,7 @@ from random import choice
 import io
 import pygame as pg
 from urllib import request
+import time
 
 with open("animes.json", 'r') as f:
     animes = json.loads(f.read())
@@ -12,6 +13,7 @@ with open("elo_raw.json", "r") as f:
 
 TOTAL_WINDOW = (900, 690)
 IMAGE_SIZE = (TOTAL_WINDOW[0]/2, TOTAL_WINDOW[1])
+UPDATE_EVERY = 30
 K = 32
 Scale = 17
 
@@ -70,7 +72,7 @@ def updateElo(id1, id2, animes, k):
     a_c, b_c = round(a_c, 3), round(b_c, 3)
     elo[id1] += a_c
     elo[id2] += b_c
-    print(f"{getAnime(id1, animes)[0]} {'+' if a_c > 0 else ''}{a_c}. {getAnime(id2, animes)[0]} {'+' if b_c > 0 else ''}{b_c}.")
+    print(f"{getAnime(id1, animes)[0]} {'+' if a_c >= 0 else ''}{a_c}. {getAnime(id2, animes)[0]} {'+' if b_c >= 0 else ''}{b_c}.")
 
 vsimg = pg.image.load("vs.png")
 VSIMG_SIZE = (50, 50)
@@ -86,7 +88,7 @@ def newImage():
     pg.display.flip()
 
 def save():
-    print("Finalizing")
+    print("\nUpdating...")
     with open("elo_raw.json", "w") as f:
         f.write(json.dumps(elo))
 
@@ -96,17 +98,20 @@ def save():
         l[getAnime(k, animes)[0]] = round(v, 2)
 
     l = {k: v for k, v in sorted(l.items(), key=lambda i: i[1], reverse=True)}
+    lwst = list(l.items())[-1][1]
+    hghst = list(l.items())[0][1]-lwst
+    l = {k: int(100*(v-lwst)/(hghst)) for k, v in l.items()}
 
     with open("elo.json", "w") as f:
         f.write(json.dumps(l, indent=4))
 
-    print("Updated")
+    print("Updated\n")
 
 # --
 # --
 # --
 
-xxx = int(input("How many times>> "))
+xxx = 999999#int(input("How many times>> "))
 
 pg.init()
 
@@ -120,18 +125,20 @@ randomId1, randomId2 = getRandomIds()
 
 newImage()
 
-
-
 pg.display.flip()
 try:
     m = 0
+    lst = time.time()
     while m < xxx:
+        if time.time() - lst > UPDATE_EVERY:
+            save()
+            lst = time.time()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 raise SystemExit
             if event.type == pg.MOUSEBUTTONDOWN:
-                k = 0
+                k = -1
                 x, y = event.pos
                 if event.button == 1:
                     if x >= IMAGE_SIZE[0]:
@@ -140,6 +147,8 @@ try:
                     if x < IMAGE_SIZE[0]:
                         print("First anime wins.")
                         k = 1
+                elif event.button > 3:
+                    print("Skip")
                 else:
                     print("Draw")
                     k = 0
@@ -156,18 +165,4 @@ try:
 except:
     pass
 finally:
-    print("Finalizing")
-    with open("elo_raw.json", "w") as f:
-        f.write(json.dumps(elo))
-
-    l = {}
-
-    for k, v in elo.items():
-        l[getAnime(k, animes)[0]] = round(v, 2)
-
-    l = {k: v for k, v in sorted(l.items(), key=lambda i: i[1], reverse=True)}
-
-    with open("elo.json", "w") as f:
-        f.write(json.dumps(l, indent=4))
-
-    print("Updated")
+    save()
