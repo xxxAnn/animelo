@@ -11,7 +11,7 @@ query ($usr: String, $page: Int, $perPage: Int) {
                     english
                 }
                 coverImage {
-                    large
+                    extraLarge
                 }
             }
         }
@@ -32,7 +32,7 @@ i = 1
 d = []
 
 while True:
-    data = [(r["media"]["title"]["romaji"], r["media"]["title"]["english"], r["media"]["id"], r["media"]["coverImage"]["large"]) for r in 
+    data = [(r["media"]["title"]["romaji"], r["media"]["title"]["english"], r["media"]["id"], r["media"]["coverImage"]["extraLarge"]) for r in 
             requests.post(url, json={'query': query, 'variables': variables}).json()["data"]["Page"]["mediaList"]]
     if data == []:
         break
@@ -41,4 +41,4 @@ while True:
     variables['page'] = i
 
 with open("animes.json", "w") as f:
-    f.write(json.dumps(d))
+    f.write(json.dumps(d, indent=4))
