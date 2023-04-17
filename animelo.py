@@ -10,7 +10,8 @@ with open("animes.json", 'r') as f:
 with open("elo_raw.json", "r") as f:
     elo = json.loads(f.read())
 
-IMAGE_SIZE = (200, 300)
+TOTAL_WINDOW = (900, 690)
+IMAGE_SIZE = (TOTAL_WINDOW[0]/2, TOTAL_WINDOW[1])
 K = 32
 Scale = 17
 
@@ -89,7 +90,8 @@ pg.init()
 
 white = (255, 255, 255)
 
-screen = pg.display.set_mode((400,300),  pg.RESIZABLE )
+screen = pg.display.set_mode(TOTAL_WINDOW,  pg.RESIZABLE)
+pg.display.set_caption("AnimElo")
 
 randomId1, randomId2 = getRandomIds()
 
