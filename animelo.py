@@ -49,7 +49,7 @@ def getRandomIds():
     return randomId1, randomId2
 
 
-def expected_win(a, b):
+def expectedWin(a, b):
     return 1/(1+10**((b-a)/Scale)) 
 
 def updateElo(id1, id2, animes, k):
@@ -58,18 +58,26 @@ def updateElo(id1, id2, animes, k):
     a_c = 0
     b_c = 0
     if k == 0:
-        a_c = K*(0.5 - expected_win(a, b))
-        b_c = K*(0.5 - expected_win(b, a))
+        a_c = K*(0.5 - expectedWin(a, b))
+        b_c = K*(0.5 - expectedWin(b, a))
     if k == 1:
-        a_c = K*(1 - expected_win(a, b))
-        b_c = K*(0 - expected_win(b, a))
+        a_c = K*(1 - expectedWin(a, b))
+        b_c = K*(0 - expectedWin(b, a))
     if k == 2:
-        a_c = K*(0 - expected_win(a, b))
-        b_c = K*(1 - expected_win(b, a))
+        a_c = K*(0 - expectedWin(a, b))
+        b_c = K*(1 - expectedWin(b, a))
     a_c, b_c = round(a_c, 3), round(b_c, 3)
     elo[id1] += a_c
     elo[id2] += b_c
     print(f"{getAnime(id1, animes)[0]} {'+' if a_c > 0 else ''}{a_c}. {getAnime(id2, animes)[0]} {'+' if b_c > 0 else ''}{b_c}.")
+
+def newImage():
+    img1 = genImage(randomId1)
+    img2 = genImage(randomId2)
+    screen.blit(img1, (0, 0))
+    screen.blit(img2, (IMAGE_SIZE[0], 0))
+    pg.display.flip()
+    print(f"\n{getAnime(randomId1, animes)[0]} VS {getAnime(randomId2, animes)[0]}")
 
 # --
 # --
@@ -85,13 +93,7 @@ screen = pg.display.set_mode((400,300),  pg.RESIZABLE )
 
 randomId1, randomId2 = getRandomIds()
 
-
-img1 = genImage(randomId1)
-img2 = genImage(randomId2)
-screen.blit(img1, (0, 0))
-screen.blit(img2, (IMAGE_SIZE[0], 0))
-print(f"\n{getAnime(randomId1, animes)[0]} VS {getAnime(randomId2, animes)[0]}")
-
+newImage()
 
 pg.display.flip()
 try:
@@ -106,10 +108,13 @@ try:
                 x, y = event.pos
                 if event.button == 1:
                     if x >= IMAGE_SIZE[0]:
+                        print("Second anime wins")
                         k = 2
                     if x < IMAGE_SIZE[0]:
+                        print("First anime wins.")
                         k = 1
                 else:
+                    print("Draw")
                     k = 0
                 
                 updateElo(randomId1, randomId2, animes, k)
@@ -120,12 +125,7 @@ try:
                 
                 randomId1, randomId2 = getRandomIds()
 
-                img1 = genImage(randomId1)
-                img2 = genImage(randomId2)
-                screen.blit(img1, (0, 0))
-                screen.blit(img2, (IMAGE_SIZE[0], 0))
-                pg.display.flip()
-                print(f"\n{getAnime(randomId1, animes)[0]} VS {getAnime(randomId2, animes)[0]}")
+                newImage()
 except:
     pass
 finally:
