@@ -72,13 +72,35 @@ def updateElo(id1, id2, animes, k):
     elo[id2] += b_c
     print(f"{getAnime(id1, animes)[0]} {'+' if a_c > 0 else ''}{a_c}. {getAnime(id2, animes)[0]} {'+' if b_c > 0 else ''}{b_c}.")
 
+vsimg = pg.image.load("vs.png")
+VSIMG_SIZE = (50, 50)
+
 def newImage():
     img1 = genImage(randomId1)
     img2 = genImage(randomId2)
     screen.blit(img1, (0, 0))
     screen.blit(img2, (IMAGE_SIZE[0], 0))
-    pg.display.flip()
     print(f"\n{getAnime(randomId1, animes)[0]} VS {getAnime(randomId2, animes)[0]}")
+    img = pg.transform.scale(vsimg, VSIMG_SIZE)
+    screen.blit(img, ((TOTAL_WINDOW[0]-VSIMG_SIZE[0])/2, (TOTAL_WINDOW[1]- VSIMG_SIZE[1])/2))
+    pg.display.flip()
+
+def save():
+    print("Finalizing")
+    with open("elo_raw.json", "w") as f:
+        f.write(json.dumps(elo))
+
+    l = {}
+
+    for k, v in elo.items():
+        l[getAnime(k, animes)[0]] = round(v, 2)
+
+    l = {k: v for k, v in sorted(l.items(), key=lambda i: i[1], reverse=True)}
+
+    with open("elo.json", "w") as f:
+        f.write(json.dumps(l, indent=4))
+
+    print("Updated")
 
 # --
 # --
@@ -92,10 +114,13 @@ white = (255, 255, 255)
 
 screen = pg.display.set_mode(TOTAL_WINDOW,  pg.RESIZABLE)
 pg.display.set_caption("AnimElo")
+pg.mouse.set_cursor(pg.SYSTEM_CURSOR_HAND)
 
 randomId1, randomId2 = getRandomIds()
 
 newImage()
+
+
 
 pg.display.flip()
 try:
