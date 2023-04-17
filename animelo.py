@@ -129,6 +129,7 @@ try:
 except:
     pass
 finally:
+    print("Finalizing")
     with open("elo_raw.json", "w") as f:
         f.write(json.dumps(elo))
 
@@ -141,3 +142,5 @@ finally:
 
     with open("elo.json", "w") as f:
         f.write(json.dumps(l, indent=4))
+
+    print("Updated")
