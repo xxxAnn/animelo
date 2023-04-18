@@ -1,2 +1,6 @@
 Delete the contents of "elo_raw.json" and replace them with "{}"
 Then run "get_animes.py" then "animelo.py"
+Before running "get_animes.py" you need to replace "USERNAME = xxxAnn" with your
+own anilist username. If you use MAL, create an anilist account and export the MAL list to anilist.
+You can run "auto_update.py" to automatically update your anime list
+however, you will need 
