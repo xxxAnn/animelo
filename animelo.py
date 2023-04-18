@@ -17,6 +17,7 @@ with open("elo_raw.json", "r") as f:
 TOTAL_WINDOW = (900, 690)
 IMAGE_SIZE = (TOTAL_WINDOW[0]/2, TOTAL_WINDOW[1])
 UPDATE_EVERY = 30
+POINT = 0
 Scale = 17
 
 image_cache = {}
@@ -55,6 +56,12 @@ def genImage(id):
     return image
 
 def getRandomIds():
+    global POINT
+    if len(CHOICES) > POINT:
+        c = CHOICES[POINT]
+        POINT += 1
+        return c
+
     randomId1 = str(choice([el[2] for el in animes]))
     randomId2 = str(choice([el[2] for el in animes]))
 
@@ -65,8 +72,10 @@ def getRandomIds():
         elo[randomId1] = 20
     if randomId2 not in elo:
         elo[randomId2] = 20
+        
 
     CHOICES.append((randomId1, randomId2))
+    POINT += 1
     return randomId1, randomId2
 
 
@@ -177,9 +186,9 @@ try:
                 elif event.button == 5:
                     print("Skip")
                 elif event.button == 4:
-                    DOUBLE = True
-                    randomId1, randomId2 = CHOICES[len(CHOICES)-2]
-                    CHOICES = CHOICES[0:(len(CHOICES)-2)]
+                    print(POINT)
+                    if POINT > 1:
+                        POINT -= 2
                 else:
                     print("Draw")
                     k = 0
@@ -190,11 +199,10 @@ try:
                 if m == xxx:
                     break
                 
-                if DOUBLE == False:
-                    randomId1, randomId2 = getRandomIds()
+                randomId1, randomId2 = getRandomIds()
 
                 newImage()
 except Exception as e:
-    pass
+    raise e
 finally:
     save()
