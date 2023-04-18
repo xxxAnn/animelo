@@ -63,6 +63,10 @@ def getRandomIds():
 
     while randomId1 == randomId2:
         randomId2 = str(choice([el[2] for el in animes]))
+    n = 0
+    while abs(getScore(elo[randomId1]) - getScore(elo[randomId2])) > 15 or n > 300:
+        randomId2 = str(choice([el[2] for el in animes]))
+        n+=1
 
     if randomId1 not in elo:
         elo[randomId1] = 20
@@ -74,6 +78,9 @@ def getRandomIds():
     POINT += 1
     return randomId1, randomId2
 
+
+def getScore(elo):
+    return int(100*(elo-LOWEST)/HIGHEST)
 
 HIGHEST = 1
 LOWEST = 1
@@ -97,6 +104,10 @@ def updateElo(id1, id2, animes, k):
     if k == 2:
         a_c = kConst(a)*(0 - expectedWin(a, b))
         b_c = kConst(b)*(1 - expectedWin(b, a))
+    if k == 3:
+        a_c = kConst(a)*(0 - expectedWin(a, b))
+        b_c = kConst(b)*(0 - expectedWin(b, a))
+
     a_c, b_c = round(a_c, 3), round(b_c, 3)
     elo[id1] += a_c
     elo[id2] += b_c
@@ -165,10 +176,12 @@ try:
             HIGHEST, LOWEST = save()
             lst = time.time()
         for event in pg.event.get():
+            EVENT_FLAG = False
             if event.type == pg.QUIT:
                 pg.quit()
                 raise SystemExit
             if event.type == pg.MOUSEBUTTONDOWN:
+                EVENT_FLAG = True
                 k = -1
                 x, y = event.pos
                 DOUBLE = False
@@ -188,6 +201,12 @@ try:
                 else:
                     print("Draw")
                     k = 0
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    print("Both lose")
+                    k = 3
+                EVENT_FLAG = True
+            if EVENT_FLAG:
                 
                 updateElo(randomId1, randomId2, animes, k)
 
