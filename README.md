@@ -1,7 +1,7 @@
 This is a program that asks you which of two anime you prefer and uses all your answers to give a rating out of 100 to each anime.
 It also contains tools to automatically update and pull from Anilist.co using the GraphQL Anilist v2 API.
 
-**How to use**
+## How to use
 Delete the contents of "elo_raw.json" and replace them with "{}"
 Before running "get_animes.py" you need to replace "USERNAME = xxxAnn" with your
 own anilist username. If you use MAL, create an anilist account and export the MAL list to anilist.
