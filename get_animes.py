@@ -1,5 +1,7 @@
 import requests, json
 
+USERNAME = "xxxAnn"
+
 query = '''
 query ($usr: String, $page: Int, $perPage: Int) { 
   Page (page: $page, perPage: $perPage) {
@@ -20,7 +22,7 @@ query ($usr: String, $page: Int, $perPage: Int) {
 '''
 
 variables = {
-    'usr': "xxxAnn",
+    'usr': USERNAME,
     'page': 1,
     'perPage': 10
 }

@@ -1,0 +1,2 @@
+Delete the contents of "elo_raw.json" and replace them with "{}"
+Then run "get_animes.py" then "animelo.py"
