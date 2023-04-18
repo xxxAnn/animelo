@@ -1,3 +1,5 @@
+# Copyright (c) Ann Mauduy-Decius
+
 import json
 from random import choice
 import io
@@ -56,6 +58,8 @@ def getRandomIds():
     randomId1 = str(choice([el[2] for el in animes]))
     randomId2 = str(choice([el[2] for el in animes]))
 
+    while randomId1 == randomId2:
+        randomId2 = str(choice([el[2] for el in animes]))
 
     if randomId1 not in elo:
         elo[randomId1] = 20
@@ -138,7 +142,7 @@ pg.init()
 
 white = (255, 255, 255)
 
-screen = pg.display.set_mode(TOTAL_WINDOW,  pg.RESIZABLE)
+screen = pg.display.set_mode(TOTAL_WINDOW)
 pg.display.set_caption("AnimElo")
 pg.mouse.set_cursor(pg.SYSTEM_CURSOR_HAND)
 
@@ -174,7 +178,8 @@ try:
                     print("Skip")
                 elif event.button == 4:
                     DOUBLE = True
-                    randomId1, randomId2 = CHOICES[-2]
+                    randomId1, randomId2 = CHOICES[len(CHOICES)-2]
+                    CHOICES = CHOICES[0:(len(CHOICES)-2)]
                 else:
                     print("Draw")
                     k = 0
