@@ -90,7 +90,7 @@ def newImage():
 def save():
     print("\nUpdating...")
     with open("elo_raw.json", "w") as f:
-        f.write(json.dumps(elo))
+        f.write(json.dumps(elo, indent=4))
 
     l = {}
 
