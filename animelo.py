@@ -36,6 +36,7 @@ def getAnime(id, animes):
     for x in animes:
         if x[2] == int(id):
             return x
+    return None
         
 def genImage(id):
     anime = getAnime(id, animes)
@@ -58,15 +59,18 @@ def getRandomIds():
         POINT += 1
         return c
 
-    randomId1 = str(choice([el[2] for el in animes]))
-    randomId2 = str(choice([el[2] for el in animes]))
+    randomId1, randomId2 = -1, -1
+    while getAnime(randomId1, animes) == None or getAnime(randomId2, animes) == None:
 
-    while randomId1 == randomId2:
+        randomId1 = str(choice([el[2] for el in animes]))
         randomId2 = str(choice([el[2] for el in animes]))
-    n = 0
-    while abs(getScore(elo[randomId1]) - getScore(elo[randomId2])) > 15 or n > 300:
-        randomId2 = str(choice([el[2] for el in animes]))
-        n+=1
+
+        while randomId1 == randomId2:
+            randomId2 = str(choice([el[2] for el in animes]))
+        n = 0
+        while abs(getScore(elo[randomId1]) - getScore(elo[randomId2])) > 15 or n > 300:
+            randomId2 = str(choice([el[2] for el in animes]))
+            n+=1
 
     if randomId1 not in elo:
         elo[randomId1] = 20
@@ -140,7 +144,7 @@ def save():
     l = {k: v for k, v in sorted(l.items(), key=lambda i: i[1], reverse=True)}
     LOWEST = list(l.items())[-1][1]
     HIGHEST = list(l.items())[0][1]-LOWEST
-    l = {k: int(100*(v-LOWEST)/(HIGHEST)) for k, v in l.items()}
+    l = {k: int(round(100*(v-LOWEST)/(HIGHEST), 0)) for k, v in l.items()}
 
     with open("elo.json", "w") as f:
         f.write(json.dumps(l, indent=4))
