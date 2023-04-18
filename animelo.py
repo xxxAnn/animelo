@@ -1,6 +1,7 @@
 import json
 from random import choice
 import io
+import os
 import pygame as pg
 from urllib import request
 import time
@@ -14,8 +15,23 @@ with open("elo_raw.json", "r") as f:
 TOTAL_WINDOW = (900, 690)
 IMAGE_SIZE = (TOTAL_WINDOW[0]/2, TOTAL_WINDOW[1])
 UPDATE_EVERY = 30
-K = 32
 Scale = 17
+
+image_cache = {}
+
+def kConst(rating):
+    if not DOUBLE:
+        if rating < 30:
+            return 64
+        elif rating < 50:
+            return 48
+        return 32
+    else:
+        if rating < 30:
+            return 128
+        elif rating < 50:
+            return 96
+        return 64
 
 def getAnime(id, animes):
     for x in animes:
@@ -24,33 +40,36 @@ def getAnime(id, animes):
         
 def genImage(id):
     anime = getAnime(id, animes)
-    image_url = anime[3]
-    req = request.Request(image_url, headers={'User-Agent': 'Magic Browser'})
-    con = request.urlopen(req).read()
-    image_file = io.BytesIO(con)
-    image = pg.image.load(image_file)
+    if os.path.exists(f"cache/{id}.png"):
+        image = pg.image.load(f"cache/{id}.png")
+    else:
+        image_url = anime[3]
+        req = request.Request(image_url, headers={'User-Agent': 'Magic Browser'})
+        con = request.urlopen(req).read()
+        image_file = io.BytesIO(con)
+        image = pg.image.load(image_file)
     image = pg.transform.scale(image, IMAGE_SIZE)
+    pg.image.save(image, f"cache/{id}.png")
     return image
 
 def getRandomIds():
-    n = 0
-    ne = False
-    while (n < 1000 and ne == False):
-        randomId1 = str(choice([el[2] for el in animes]))
-        randomId2 = str(choice([el[2] for el in animes]))
+    randomId1 = str(choice([el[2] for el in animes]))
+    randomId2 = str(choice([el[2] for el in animes]))
 
-        while randomId2 == randomId1:
-            randomId2 = str(choice([el[2] for el in animes]))
-        if elo[randomId1] == 20 or elo[randomId1] == 36:
-            ne = True
-        n += 1
 
     if randomId1 not in elo:
         elo[randomId1] = 20
     if randomId2 not in elo:
         elo[randomId2] = 20
+
+    CHOICES.append((randomId1, randomId2))
     return randomId1, randomId2
 
+
+HIGHEST = 1
+LOWEST = 1
+DOUBLE = False
+CHOICES = []
 
 def expectedWin(a, b):
     return 1/(1+10**((b-a)/Scale)) 
@@ -61,18 +80,18 @@ def updateElo(id1, id2, animes, k):
     a_c = 0
     b_c = 0
     if k == 0:
-        a_c = K*(0.5 - expectedWin(a, b))
-        b_c = K*(0.5 - expectedWin(b, a))
+        a_c = kConst(a)*(0.5 - expectedWin(a, b))
+        b_c = kConst(b)*(0.5 - expectedWin(b, a))
     if k == 1:
-        a_c = K*(1 - expectedWin(a, b))
-        b_c = K*(0 - expectedWin(b, a))
+        a_c = kConst(a)*(1 - expectedWin(a, b))
+        b_c = kConst(b)*(0 - expectedWin(b, a))
     if k == 2:
-        a_c = K*(0 - expectedWin(a, b))
-        b_c = K*(1 - expectedWin(b, a))
+        a_c = kConst(a)*(0 - expectedWin(a, b))
+        b_c = kConst(b)*(1 - expectedWin(b, a))
     a_c, b_c = round(a_c, 3), round(b_c, 3)
     elo[id1] += a_c
     elo[id2] += b_c
-    print(f"{getAnime(id1, animes)[0]} {'+' if a_c >= 0 else ''}{a_c}. {getAnime(id2, animes)[0]} {'+' if b_c >= 0 else ''}{b_c}.")
+    print(f"{getAnime(id1, animes)[0]} {'+' if a_c >= -0.005 else ''}{round(100*a_c/HIGHEST, 2)} points. New score: {int(100*(elo[id1]-LOWEST)/HIGHEST)}/100. Previous Score: {int(100*((elo[id1]-a_c)-LOWEST)/HIGHEST)}/100.\n{getAnime(id2, animes)[0]} {'+' if b_c >= -0.005 else ''}{round(100*b_c/HIGHEST, 2)} points. New score: {int(100*(elo[id2]-LOWEST)/HIGHEST)}/100. Previous Score: {int(100*((elo[id2]-b_c)-LOWEST)/HIGHEST)}/100.")
 
 vsimg = pg.image.load("vs.png")
 VSIMG_SIZE = (50, 50)
@@ -87,6 +106,7 @@ def newImage():
     screen.blit(img, ((TOTAL_WINDOW[0]-VSIMG_SIZE[0])/2, (TOTAL_WINDOW[1]- VSIMG_SIZE[1])/2))
     pg.display.flip()
 
+
 def save():
     print("\nUpdating...")
     with open("elo_raw.json", "w") as f:
@@ -98,14 +118,15 @@ def save():
         l[getAnime(k, animes)[0]] = round(v, 2)
 
     l = {k: v for k, v in sorted(l.items(), key=lambda i: i[1], reverse=True)}
-    lwst = list(l.items())[-1][1]
-    hghst = list(l.items())[0][1]-lwst
-    l = {k: int(100*(v-lwst)/(hghst)) for k, v in l.items()}
+    LOWEST = list(l.items())[-1][1]
+    HIGHEST = list(l.items())[0][1]-LOWEST
+    l = {k: int(100*(v-LOWEST)/(HIGHEST)) for k, v in l.items()}
 
     with open("elo.json", "w") as f:
         f.write(json.dumps(l, indent=4))
 
     print("Updated\n")
+    return HIGHEST, LOWEST
 
 # --
 # --
@@ -127,11 +148,12 @@ newImage()
 
 pg.display.flip()
 try:
+    HIGHEST, LOWEST = save()
     m = 0
     lst = time.time()
     while m < xxx:
         if time.time() - lst > UPDATE_EVERY:
-            save()
+            HIGHEST, LOWEST = save()
             lst = time.time()
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -140,6 +162,7 @@ try:
             if event.type == pg.MOUSEBUTTONDOWN:
                 k = -1
                 x, y = event.pos
+                DOUBLE = False
                 if event.button == 1:
                     if x >= IMAGE_SIZE[0]:
                         print("Second anime wins")
@@ -147,8 +170,11 @@ try:
                     if x < IMAGE_SIZE[0]:
                         print("First anime wins.")
                         k = 1
-                elif event.button > 3:
+                elif event.button == 5:
                     print("Skip")
+                elif event.button == 4:
+                    DOUBLE = True
+                    randomId1, randomId2 = CHOICES[-2]
                 else:
                     print("Draw")
                     k = 0
@@ -159,10 +185,11 @@ try:
                 if m == xxx:
                     break
                 
-                randomId1, randomId2 = getRandomIds()
+                if DOUBLE == False:
+                    randomId1, randomId2 = getRandomIds()
 
                 newImage()
-except:
+except Exception as e:
     pass
 finally:
     save()
