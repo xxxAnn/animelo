@@ -25,14 +25,10 @@ image_cache = {}
 def kConst(rating):
     if not DOUBLE:
         if rating < 30:
-            return 64
-        elif rating < 50:
             return 48
         return 32
     else:
         if rating < 30:
-            return 128
-        elif rating < 50:
             return 96
         return 64
 
