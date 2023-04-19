@@ -19,6 +19,15 @@ IMAGE_SIZE = (TOTAL_WINDOW[0]/2, TOTAL_WINDOW[1])
 UPDATE_EVERY = 30
 POINT = 0
 Scale = 17
+HIGHEST = 1
+LOWEST = 1
+DOUBLE = False
+CHOICES = []
+
+MAX_SCORE = 71.0001
+MIN_SCORE = 70
+MAX_SCORE_DRIFT = 200
+MIN_SCORE_DRIFT = -100
 
 image_cache = {}
 
@@ -60,22 +69,42 @@ def getRandomIds():
         return c
 
     randomId1, randomId2 = -1, -1
-    while getAnime(randomId1, animes) == None or getAnime(randomId2, animes) == None:
+    elo[-1] = 0
+    while (getAnime(randomId1, animes) == None or getAnime(randomId2, animes) == None):
 
         randomId1 = str(choice([el[2] for el in animes]))
+        if randomId1 not in elo:
+                elo[randomId1] = 20
+        while getScore(elo[randomId1]) < MIN_SCORE or getScore(elo[randomId1]) > MAX_SCORE:
+            randomId1 = str(choice([el[2] for el in animes]))
+            if randomId1 not in elo:
+                elo[randomId1] = 20
         randomId2 = str(choice([el[2] for el in animes]))
+
+        if randomId1 not in elo:
+            elo[randomId1] = 20
+        if randomId2 not in elo:
+            elo[randomId2] = 20
 
         while randomId1 == randomId2:
             randomId2 = str(choice([el[2] for el in animes]))
-        n = 0
-        while abs(getScore(elo[randomId1]) - getScore(elo[randomId2])) > 15 or n > 300:
+            if randomId1 not in elo:
+                elo[randomId1] = 20
+            if randomId2 not in elo:
+                elo[randomId2] = 20
+        
+        n = 0   
+
+        while abs(getScore(elo[randomId1]) - getScore(elo[randomId2])) > MAX_SCORE_DRIFT or n > 300 or abs(getScore(elo[randomId1]) - getScore(elo[randomId2])) < MIN_SCORE_DRIFT:
             randomId2 = str(choice([el[2] for el in animes]))
+
+            if randomId1 not in elo:
+                elo[randomId1] = 20
+            if randomId2 not in elo:
+                elo[randomId2] = 20
             n+=1
 
-    if randomId1 not in elo:
-        elo[randomId1] = 20
-    if randomId2 not in elo:
-        elo[randomId2] = 20
+
         
 
     CHOICES.append((randomId1, randomId2))
@@ -85,11 +114,6 @@ def getRandomIds():
 
 def getScore(elo):
     return int(100*(elo-LOWEST)/HIGHEST)
-
-HIGHEST = 1
-LOWEST = 1
-DOUBLE = False
-CHOICES = []
 
 def expectedWin(a, b):
     return 1/(1+10**((b-a)/Scale)) 
@@ -139,7 +163,8 @@ def save():
     l = {}
 
     for k, v in elo.items():
-        l[getAnime(k, animes)[0]] = round(v, 2)
+        if getAnime(k, animes) != None:
+            l[getAnime(k, animes)[0]] = round(v, 2)
 
     l = {k: v for k, v in sorted(l.items(), key=lambda i: i[1], reverse=True)}
     LOWEST = list(l.items())[-1][1]
@@ -165,6 +190,8 @@ white = (255, 255, 255)
 screen = pg.display.set_mode(TOTAL_WINDOW)
 pg.display.set_caption("AnimElo")
 pg.mouse.set_cursor(pg.SYSTEM_CURSOR_HAND)
+
+HIGHEST, LOWEST = save()
 
 randomId1, randomId2 = getRandomIds()
 
