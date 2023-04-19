@@ -4,6 +4,9 @@ import time
 
 url = 'https://graphql.anilist.co'
 
+with open("animes.json", 'r') as f:
+    animes = json.loads(f.read())
+
 with open("code.txt", "r", encoding='utf-8') as f:
     code = f.read()
 
@@ -34,10 +37,8 @@ lwst = list(l.items())[-1][1]
 hghst = list(l.items())[0][1]-lwst
 l = {k: int(100*(v-lwst)/(hghst)) for k, v in l.items()}
 
-ind = -1
 for k, v in l.items():
-    ind+=1
-    if ind<89:
+    if k not in [anime[2] for anime in animes]:
         continue
     query = '''
     mutation ($mediaId: Int, $score: Float) {
