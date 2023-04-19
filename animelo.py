@@ -19,6 +19,15 @@ IMAGE_SIZE = (TOTAL_WINDOW[0]/2, TOTAL_WINDOW[1])
 UPDATE_EVERY = 30
 POINT = 0
 Scale = 17
+HIGHEST = 1
+LOWEST = 1
+DOUBLE = False
+CHOICES = []
+
+MAX_SCORE = 71.0001
+MIN_SCORE = 70
+MAX_SCORE_DRIFT = 200
+MIN_SCORE_DRIFT = -100
 
 image_cache = {}
 
@@ -36,6 +45,7 @@ def getAnime(id, animes):
     for x in animes:
         if x[2] == int(id):
             return x
+    return None
         
 def genImage(id):
     anime = getAnime(id, animes)
@@ -58,16 +68,43 @@ def getRandomIds():
         POINT += 1
         return c
 
-    randomId1 = str(choice([el[2] for el in animes]))
-    randomId2 = str(choice([el[2] for el in animes]))
+    randomId1, randomId2 = -1, -1
+    elo[-1] = 0
+    while (getAnime(randomId1, animes) == None or getAnime(randomId2, animes) == None):
 
-    while randomId1 == randomId2:
+        randomId1 = str(choice([el[2] for el in animes]))
+        if randomId1 not in elo:
+                elo[randomId1] = 20
+        while getScore(elo[randomId1]) < MIN_SCORE or getScore(elo[randomId1]) > MAX_SCORE:
+            randomId1 = str(choice([el[2] for el in animes]))
+            if randomId1 not in elo:
+                elo[randomId1] = 20
         randomId2 = str(choice([el[2] for el in animes]))
 
-    if randomId1 not in elo:
-        elo[randomId1] = 20
-    if randomId2 not in elo:
-        elo[randomId2] = 20
+        if randomId1 not in elo:
+            elo[randomId1] = 20
+        if randomId2 not in elo:
+            elo[randomId2] = 20
+
+        while randomId1 == randomId2:
+            randomId2 = str(choice([el[2] for el in animes]))
+            if randomId1 not in elo:
+                elo[randomId1] = 20
+            if randomId2 not in elo:
+                elo[randomId2] = 20
+        
+        n = 0   
+
+        while abs(getScore(elo[randomId1]) - getScore(elo[randomId2])) > MAX_SCORE_DRIFT or n > 300 or abs(getScore(elo[randomId1]) - getScore(elo[randomId2])) < MIN_SCORE_DRIFT:
+            randomId2 = str(choice([el[2] for el in animes]))
+
+            if randomId1 not in elo:
+                elo[randomId1] = 20
+            if randomId2 not in elo:
+                elo[randomId2] = 20
+            n+=1
+
+
         
 
     CHOICES.append((randomId1, randomId2))
@@ -75,10 +112,8 @@ def getRandomIds():
     return randomId1, randomId2
 
 
-HIGHEST = 1
-LOWEST = 1
-DOUBLE = False
-CHOICES = []
+def getScore(elo):
+    return int(100*(elo-LOWEST)/HIGHEST)
 
 def expectedWin(a, b):
     return 1/(1+10**((b-a)/Scale)) 
@@ -97,6 +132,10 @@ def updateElo(id1, id2, animes, k):
     if k == 2:
         a_c = kConst(a)*(0 - expectedWin(a, b))
         b_c = kConst(b)*(1 - expectedWin(b, a))
+    if k == 3:
+        a_c = kConst(a)*(0 - expectedWin(a, b))
+        b_c = kConst(b)*(0 - expectedWin(b, a))
+
     a_c, b_c = round(a_c, 3), round(b_c, 3)
     elo[id1] += a_c
     elo[id2] += b_c
@@ -124,12 +163,13 @@ def save():
     l = {}
 
     for k, v in elo.items():
-        l[getAnime(k, animes)[0]] = round(v, 2)
+        if getAnime(k, animes) != None:
+            l[getAnime(k, animes)[0]] = round(v, 2)
 
     l = {k: v for k, v in sorted(l.items(), key=lambda i: i[1], reverse=True)}
     LOWEST = list(l.items())[-1][1]
     HIGHEST = list(l.items())[0][1]-LOWEST
-    l = {k: int(100*(v-LOWEST)/(HIGHEST)) for k, v in l.items()}
+    l = {k: int(round(100*(v-LOWEST)/(HIGHEST), 0)) for k, v in l.items()}
 
     with open("elo.json", "w") as f:
         f.write(json.dumps(l, indent=4))
@@ -151,6 +191,8 @@ screen = pg.display.set_mode(TOTAL_WINDOW)
 pg.display.set_caption("AnimElo")
 pg.mouse.set_cursor(pg.SYSTEM_CURSOR_HAND)
 
+HIGHEST, LOWEST = save()
+
 randomId1, randomId2 = getRandomIds()
 
 newImage()
@@ -165,10 +207,12 @@ try:
             HIGHEST, LOWEST = save()
             lst = time.time()
         for event in pg.event.get():
+            EVENT_FLAG = False
             if event.type == pg.QUIT:
                 pg.quit()
                 raise SystemExit
             if event.type == pg.MOUSEBUTTONDOWN:
+                EVENT_FLAG = True
                 k = -1
                 x, y = event.pos
                 DOUBLE = False
@@ -188,6 +232,12 @@ try:
                 else:
                     print("Draw")
                     k = 0
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    print("Both lose")
+                    k = 3
+                EVENT_FLAG = True
+            if EVENT_FLAG:
                 
                 updateElo(randomId1, randomId2, animes, k)
 
