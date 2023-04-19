@@ -50,7 +50,7 @@ for k, v in l.items():
     '''
 
     k = requests.post(url, json={'query': query, 'variables': {'mediaId': k, 'score': v}}, headers={'Authorization': f"Bearer {access_token}", 'Content-Type': 'application/json', 'Accept': 'application/json'}).json()
-    print(k)
+    #print(k)
     id = k["data"]["SaveMediaListEntry"]["id"]
 
     query = '''
