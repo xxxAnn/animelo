@@ -34,11 +34,7 @@ lwst = list(l.items())[-1][1]
 hghst = list(l.items())[0][1]-lwst
 l = {k: int(100*(v-lwst)/(hghst)) for k, v in l.items()}
 
-ind = -1
 for k, v in l.items():
-    ind+=1
-    if ind<89:
-        continue
     query = '''
     mutation ($mediaId: Int, $score: Float) {
         SaveMediaListEntry (mediaId: $mediaId, score: $score) {
