@@ -1,6 +1,7 @@
 import Anilist, json
+import logging
 
-client = Anilist.QueryClient()
+client = Anilist.QueryClient(logging.WARNING)
 
 media_list = client.media_list(username="xxxAnn", languages=["romaji", "english"])
 

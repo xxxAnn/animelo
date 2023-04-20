@@ -1,6 +1,7 @@
 import json
 import time
 import Anilist
+import logging
 
 with open("animes.json", 'r') as f:
     animes = json.loads(f.read())
@@ -19,10 +20,17 @@ hghst = list(l.items())[0][1]-lwst
 l = {k: int(100*(v-lwst)/(hghst)) for k, v in l.items()}
 
 auth = Anilist.Auth.from_config_file("config.json")
-mutate_client = Anilist.MutationClient(auth)
+mutate_client = Anilist.MutationClient(auth, logging.INFO)
+
+def getAnime(id, animes):
+    for x in animes:
+        if x[2] == int(id):
+            return x
+    return None
 
 for k, v in l.items():
-    
-    mutate_client.media_entry(k).set_score(v)
+    if k in [anime[2] for anime in animes]:
+        mutate_client.media_entry(k).set_score(v)
 
-    time.sleep(1.5)
+        time.sleep(1.5)
+
