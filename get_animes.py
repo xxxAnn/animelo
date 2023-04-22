@@ -1,11 +1,21 @@
 import Anilist, json
+from Anilist.scheme import mediaScheme
 import logging
 
 client = Anilist.QueryClient(logging.WARNING)
+list_query = client.media_list()
 
-media_list = client.media_list(username="xxxAnn", languages=["romaji", "english"])
+list_query.search(
+    mediaScheme().title.romaji,
 
-d = [[el.title.romaji, el.title.english, el.id, el.coverImage.extraLarge] for el in media_list.entries]
+    paginate=True,
+
+    userName="xxxAnn"
+)
+
+result = list_query.results_take_all()
+
+d = [[el.media.title.romaji, el.media.title.english, el.media.id, el.media.coverImage.extraLarge] for el in result]
 
 with open("animes.json", "w") as f:
     f.write(json.dumps(d, indent=4))

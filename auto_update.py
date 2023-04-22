@@ -20,7 +20,7 @@ hghst = list(l.items())[0][1]-lwst
 l = {k: int(100*(v-lwst)/(hghst)) for k, v in l.items()}
 
 auth = Anilist.Auth.from_config_file("config.json")
-mutate_client = Anilist.MutationClient(auth, logging.INFO)
+mutate_client = Anilist.MutationClient(auth, level=logging.WARNING)
 
 def getAnime(id, animes):
     for x in animes:
@@ -30,7 +30,7 @@ def getAnime(id, animes):
 
 for k, v in l.items():
     if k in [anime[2] for anime in animes]:
-        mutate_client.media_entry(k).set_score(v)
+        mutate_client.media_entry(k).set_score(float(v))
 
         time.sleep(1.5)
 
